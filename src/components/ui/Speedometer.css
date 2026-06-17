@@ -1,0 +1,171 @@
+.speedometer-widget {
+  position: absolute;
+  bottom: 40px;
+  right: 40px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, #1a1c23 0%, #0d0f14 100%);
+  border-radius: 50%;
+  border: 4px solid #333845;
+  box-shadow: 
+    0 0 20px rgba(0,0,0,0.8),
+    inset 0 0 30px rgba(0,0,0,0.9),
+    0 0 10px rgba(255, 60, 60, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+  color: white;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.speedometer-face {
+  position: relative;
+  width: 90%;
+  height: 90%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #232732 0%, #151821 70%);
+  box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+}
+
+.tick {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  transform-origin: center center;
+}
+
+.tick.minor::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: -1px;
+  width: 2px;
+  height: 8px;
+  background-color: #555;
+}
+
+.tick.major::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: -1.5px;
+  width: 3px;
+  height: 14px;
+  background-color: #f1f1f1;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+.tick-label {
+  position: absolute;
+  top: 30px; /* Distancia desde el borde */
+  left: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ccc;
+  display: inline-block;
+  transform-origin: center;
+}
+
+/* Zona roja a altas velocidades */
+.tick.redline .tick-label,
+.tick.redline::before {
+  color: #ff4757;
+  background-color: #ff4757;
+  box-shadow: 0 0 6px rgba(255, 71, 87, 0.6);
+}
+
+.needle-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.08s ease-out; /* Movimiento suave de la aguja */
+  z-index: 10;
+}
+
+.needle {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 4px;
+  height: 42%;
+  background: linear-gradient(to top, #ff4757, #ff6b81);
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0 0 8px rgba(255, 71, 87, 0.8);
+}
+
+.needle::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -2px;
+  width: 8px;
+  height: 100%;
+  background: transparent;
+  box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
+}
+
+.needle-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  background: #1a1c23;
+  border: 3px solid #333845;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 10px rgba(0,0,0,0.8);
+  z-index: 11;
+}
+
+.needle-center::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: #ff4757;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 5px rgba(255, 71, 87, 1);
+}
+
+.digital-readout {
+  position: absolute;
+  bottom: 35px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0,0,0,0.4);
+  padding: 6px 18px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.digital-speed {
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+.digital-unit {
+  font-size: 11px;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}

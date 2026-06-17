@@ -1,19 +1,26 @@
 import { useState, useEffect } from 'react';
+import { Loader } from '@react-three/drei';
 import GameScene from './components/scene/GameScene';
 import { useSceneTheme } from './hooks/useSceneTheme';
 import { GameState } from './gameState';
+import Speedometer from './components/ui/Speedometer';
 import './App.css';
 import './index.css';
 
 export default function App() {
   const sceneTheme = useSceneTheme();
 
+  const [gameId, setGameId] = useState(0); // Clave para forzar el reinicio limpio de la escena
+  const [isMenu, setIsMenu] = useState(true);
   const [isGameOver, setIsGameOver] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [score, setScore] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
+      if (GameState.isMenu !== isMenu) {
+        setIsMenu(GameState.isMenu);
+      }
       if (GameState.isGameOver !== isGameOver) {
         setIsGameOver(GameState.isGameOver);
         if (GameState.isGameOver) {
@@ -26,7 +33,7 @@ export default function App() {
     }, 100);
 
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && !GameState.isGameOver) {
+      if (e.key === 'Escape' && !GameState.isGameOver && !GameState.isMenu) {
         GameState.isPaused = !GameState.isPaused;
       }
     };
@@ -45,21 +52,43 @@ export default function App() {
       window.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isGameOver, isPaused]);
+  }, [isGameOver, isPaused, isMenu]);
+
+  const handleStartGame = () => {
+    GameState.isMenu = false;
+    setIsMenu(false);
+  };
 
   const handleRestart = () => {
-    // Un-mount the TrafficManager's active cars by reloading the page is the simplest and most robust way
-    // But since this is React, we can dispatch a custom event, or rely on GameState.reset() which we implemented.
-    // However, TrafficManager doesn't clear its 'cars' state on reset yet.
-    // We can dispatch an event to clear cars, or just reload the window.
-    window.location.reload();
+    // Al cambiar el ID, React desmonta y vuelve a montar toda la escena 3D al instante.
+    // Como los modelos ya están cacheados, no habrá pantalla de carga y las físicas se reiniciarán limpias.
+    GameState.reset();
+    setIsGameOver(false);
+    setScore(0);
+    setGameId(prevId => prevId + 1);
   };
 
   return (
     <>
       <GameScene
+        key={gameId}
         sceneTheme={sceneTheme}
       />
+
+      <Loader />
+
+      {!isMenu && !isGameOver && <Speedometer />}
+
+      {isMenu && (
+        <div className="main-menu-overlay">
+          <div className="main-menu-modal">
+            <h1 className="main-menu-title">The Algar Road</h1>
+            <button type="button" onClick={handleStartGame} className="play-btn">
+              JUGAR
+            </button>
+          </div>
+        </div>
+      )}
 
 
       {isGameOver && (

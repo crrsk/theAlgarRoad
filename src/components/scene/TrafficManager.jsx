@@ -1,16 +1,8 @@
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import TrafficCar from './TrafficCar';
+import { RigidBody } from '@react-three/rapier';
+import TrafficCar, { VEHICLE_CONFIG } from './TrafficCar';
 import { GameState } from '../../gameState';
-
-const MODELS = [
-  '/CochesCirculacion/Bus.glb',
-  '/CochesCirculacion/Jeep.glb',
-  '/CochesCirculacion/Pickup Truck.glb',
-  '/CochesCirculacion/Police Car.glb',
-  '/CochesCirculacion/Red Car.glb',
-  '/CochesCirculacion/Sports Car.glb',
-];
 
 const SPAWN_Z_FRONT = -60;
 const SPAWN_Z_BACK = 20; 
@@ -28,7 +20,7 @@ export default function TrafficManager() {
   const spawnTimer = useRef(0);
 
   useFrame((_, delta) => {
-    if (GameState.isGameOver || GameState.isPaused) return;
+    if (GameState.isMenu || GameState.isGameOver || GameState.isPaused) return;
 
     GameState.distance += GameState.speed * delta * 0.1;
 
@@ -44,7 +36,10 @@ export default function TrafficManager() {
       const isLeftLane = Math.random() > 0.5;
       const direction = isLeftLane ? 'oncoming' : 'same';
       const laneX = isLeftLane ? -1.2 : 1.2;
-      const modelPath = MODELS[Math.floor(Math.random() * MODELS.length)];
+      
+      // Select a random car configuration
+      const randomConfig = VEHICLE_CONFIG[Math.floor(Math.random() * VEHICLE_CONFIG.length)];
+      const modelPath = randomConfig.path;
       
       let carSpeed = 0;
       let spawnZ = SPAWN_Z_FRONT;
@@ -102,16 +97,13 @@ export default function TrafficManager() {
       
       car.z += approachSpeed * delta;
 
-      // Update actual Three.js mesh position directly! (0 React renders)
+      // Update actual Rapier kinematic position directly! (0 React renders)
       if (car.meshRef.current) {
-        car.meshRef.current.position.z = car.z;
+        car.meshRef.current.setNextKinematicTranslation({ x: car.x, y: -0.66, z: car.z });
       }
 
-      // Collision check
-      if (Math.abs(car.z) < COLLISION_DISTANCE_Z && Math.abs(car.x - GameState.playerX) < COLLISION_DISTANCE_X) {
-        collided = true;
-      }
-
+      // Collision check is now handled by Rapier's onCollisionEnter in ControllableCar
+      
       // Despawn check
       if (car.z >= DESPAWN_Z_BACK || car.z <= DESPAWN_Z_FRONT) {
         carsRef.current.splice(i, 1);
@@ -134,9 +126,16 @@ export default function TrafficManager() {
       {activeCars.map(car => {
         const rotationY = car.direction === 'oncoming' ? 0 : Math.PI;
         return (
-          <group key={car.id} ref={car.meshRef} position={[car.x, -0.66, car.z]} rotation={[0, rotationY, 0]}>
+          <RigidBody 
+            key={car.id} 
+            ref={car.meshRef} 
+            type="kinematicPosition" 
+            colliders="hull" 
+            position={[car.x, -0.66, car.z]} 
+            rotation={[0, rotationY, 0]}
+          >
             <TrafficCar modelPath={car.modelPath} />
-          </group>
+          </RigidBody>
         );
       })}
     </group>

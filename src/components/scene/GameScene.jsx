@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
+import { Physics } from '@react-three/rapier';
 import CityEnvironment from './CityEnvironment';
 import ControllableCar from './ControllableCar';
 import TrafficManager from './TrafficManager';
@@ -51,33 +52,36 @@ export default function GameScene({ sceneTheme }) {
         toneMappingExposure: 1.18,
       }}
     >
-      <PerspectiveCamera
-        makeDefault
-        position={[0, 1.7, 7.4]}
-        rotation={[-0.12, 0, 0]}
-        fov={58}
-      />
-      <OrbitControls
-        target={[0, 0.45, 0]}
-        enableDamping
-        dampingFactor={0.08}
-        enablePan={false}
-        minDistance={5.2}
-        maxDistance={10.5}
-        minPolarAngle={Math.PI * 0.24}
-        maxPolarAngle={Math.PI * 0.54}
-        minAzimuthAngle={-Math.PI * 0.34}
-        maxAzimuthAngle={Math.PI * 0.34}
-        rotateSpeed={0.55}
-        zoomSpeed={0.75}
-      />
-      <color attach="background" args={[sceneTheme.sky]} />
-      <fog attach="fog" args={[sceneTheme.fog, 15, 35]} />
-      <SceneLights theme={sceneTheme} />
-      <CityEnvironment theme={sceneTheme} />
-
-      <TrafficManager />
-      <ControllableCar />
+      <Suspense fallback={null}>
+        <PerspectiveCamera
+          makeDefault
+          position={[0, 1.7, 7.4]}
+          rotation={[-0.12, 0, 0]}
+          fov={58}
+        />
+        <OrbitControls
+          target={[0, 0.45, 0]}
+          enableDamping
+          dampingFactor={0.08}
+          enablePan={false}
+          minDistance={5.2}
+          maxDistance={10.5}
+          minPolarAngle={Math.PI * 0.24}
+          maxPolarAngle={Math.PI * 0.54}
+          minAzimuthAngle={-Math.PI * 0.34}
+          maxAzimuthAngle={Math.PI * 0.34}
+          rotateSpeed={0.55}
+          zoomSpeed={0.75}
+        />
+        <color attach="background" args={[sceneTheme.sky]} />
+        <fog attach="fog" args={[sceneTheme.fog, 15, 35]} />
+        <SceneLights theme={sceneTheme} />
+        <Physics>
+          <CityEnvironment theme={sceneTheme} />
+          <TrafficManager />
+          <ControllableCar />
+        </Physics>
+      </Suspense>
     </Canvas>
   );
 }

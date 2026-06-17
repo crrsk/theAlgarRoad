@@ -73,6 +73,46 @@ export function createFacadeTexture(baseColor, seed) {
   }, [1.8, 5]);
 }
 
+export function createGlobalFacadeTexture() {
+  return createCanvasTexture((context, width, height) => {
+    const brickWidth = 60;
+    const brickHeight = 26;
+    const mortar = 3;
+    const rowCount = Math.ceil((height + brickHeight * 2) / (brickHeight + mortar));
+
+    context.fillStyle = '#ffffff'; // White base so we can tint it with Instance color
+    context.fillRect(0, 0, width, height);
+    context.fillStyle = 'rgba(16, 20, 28, 0.34)';
+    context.fillRect(0, 0, width, height);
+
+    Array.from({ length: rowCount }, (_, rowIndex) => {
+      const y = -brickHeight + rowIndex * (brickHeight + mortar);
+      const offset = rowIndex % 2 === 0 ? 0 : -(brickWidth + mortar) / 2;
+      const columnCount = Math.ceil((width + brickWidth * 2) / (brickWidth + mortar));
+
+      return Array.from({ length: columnCount }, (_, columnIndex) => {
+        const x = offset - brickWidth + columnIndex * (brickWidth + mortar);
+        const variation = ((x * 13 + y * 7) % 28) - 14;
+        const light = Math.max(0, Math.min(255, 180 + variation));
+        const alpha = 0.34 + (Math.abs(variation) % 7) * 0.018;
+
+        context.fillStyle = `rgba(${light}, ${light}, ${light}, ${alpha})`;
+        context.fillRect(x, y, brickWidth, brickHeight);
+        context.fillStyle = 'rgba(255, 255, 255, 0.035)';
+        context.fillRect(x + 3, y + 3, brickWidth - 6, 2);
+
+        return null;
+      });
+    });
+
+    context.fillStyle = 'rgba(0, 0, 0, 0.18)';
+    Array.from({ length: Math.ceil(height / (brickHeight + mortar)) }, (_, index) => {
+      context.fillRect(0, index * (brickHeight + mortar), width, mortar);
+      return null;
+    });
+  }, [1.8, 5]);
+}
+
 export function createRoadTexture(baseColor) {
   return createCanvasTexture((context, width, height) => {
     // 1. Base color

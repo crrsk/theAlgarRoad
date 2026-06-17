@@ -1,6 +1,6 @@
 # The Algar Road
 
-Simulación de conducción 3D en navegador.
+Conducción 3D en navegador.
 
 ## Tecnologías
 

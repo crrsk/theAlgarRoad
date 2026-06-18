@@ -157,8 +157,11 @@ export default function CityEnvironment({ theme }) {
 
   useFrame((_, delta) => {
     if (GameState.isGameOver || GameState.isPaused) return;
-    roadTexture.offset.y += GameState.speed * delta * 0.1;
-    sidewalkTexture.offset.y += GameState.speed * delta * 0.1;
+    // Sincronización exacta: multiplicador = repeat.y / longitud_del_plano
+    // Road: repeat.y = 18, longitud = 80 -> 18/80 = 0.225
+    // Sidewalk: repeat.y = 22, longitud = 80 -> 22/80 = 0.275
+    roadTexture.offset.y += GameState.speed * delta * 0.225;
+    sidewalkTexture.offset.y += GameState.speed * delta * 0.275;
   });
 
   const isNightOrGolden = theme.type === 'night' || theme.type === 'golden';

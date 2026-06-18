@@ -39,7 +39,10 @@ export default function TrafficManager() {
   useFrame((_, delta) => {
     if (GameState.isMenu || GameState.isGameOver || GameState.isPaused) return;
 
-    GameState.distance += GameState.speed * delta * 0.1;
+    // Actualizar distancia recorrida para la dificultad
+    // 30 speed max -> Queremos 33.3 m/s
+    // Multiplicador = 33.3 / 30 = ~1.11
+    GameState.distance += GameState.speed * delta * 1.11;
 
     let needsRender = false;
 
@@ -69,7 +72,8 @@ export default function TrafficManager() {
 
     // --- SPAWN LOGIC ---
     // Nivel de dificultad basado en los km recorridos (GameState.distance en metros)
-    const difficultyLevel = Math.min(4, Math.floor(GameState.distance / 500));
+    // Sube de nivel cada 2.5 km
+    const difficultyLevel = Math.min(4, Math.floor(GameState.distance / 2500));
     
     const trySpawnInLane = (laneIndex) => {
       const isLeftLane = laneIndex === 0;

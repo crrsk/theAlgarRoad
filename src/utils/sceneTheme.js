@@ -28,29 +28,23 @@ const SCENE_THEMES = {
     sunColor: 0xbcd7ff,
     type: 'night',
   },
+  retrowave: {
+    buildingLight: 3.5,
+    fog: '#0a001a', // very dark purple fog
+    keyLight: 0.2,
+    sky: '#020005', // near pitch black sky
+    street: 0x0a0a1a,
+    sunColor: 0x00ffff,
+    type: 'retrowave',
+  },
 };
 
-function getSpainHour() {
-  return Number(new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit',
-    hour12: false,
-    timeZone: SPAIN_TIME_ZONE,
-  }).format(new Date()));
+export function getRandomCityTheme() {
+  const cityThemes = ['day', 'golden', 'night'];
+  const randomName = cityThemes[Math.floor(Math.random() * cityThemes.length)];
+  return SCENE_THEMES[randomName];
 }
 
-function getThemeName(hour) {
-  switch (true) {
-    case hour >= 21 || hour < 7:
-      return 'night';
-
-    case hour >= 19 || hour < 9:
-      return 'golden';
-
-    default:
-      return 'day';
-  }
-}
-
-export function getSpainSceneTheme() {
-  return SCENE_THEMES[getThemeName(getSpainHour())];
+export function getThemeByName(name) {
+  return SCENE_THEMES[name] || SCENE_THEMES['day'];
 }

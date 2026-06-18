@@ -69,7 +69,7 @@ export default function TrafficManager() {
 
     // --- SPAWN LOGIC ---
     // Nivel de dificultad basado en los km recorridos (GameState.distance en metros)
-    const difficultyLevel = Math.min(4, Math.floor(GameState.distance / 1000));
+    const difficultyLevel = Math.min(4, Math.floor(GameState.distance / 500));
     
     const trySpawnInLane = (laneIndex) => {
       const isLeftLane = laneIndex === 0;

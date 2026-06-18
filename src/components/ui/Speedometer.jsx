@@ -49,7 +49,7 @@ export default function Speedometer() {
         style={{ transform: `rotate(${angle}deg)` }}
       >
         {isMajor && (
-          <span className="tick-label" style={{ transform: `rotate(${-angle}deg) translateX(-50%)` }}>
+          <span className="tick-label" style={{ transform: `translate(-50%, 0) rotate(${-angle}deg)` }}>
             {i}
           </span>
         )}

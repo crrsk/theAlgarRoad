@@ -61,8 +61,8 @@
 
 .tick-label {
   position: absolute;
-  top: 30px; /* Distancia desde el borde */
-  left: 0;
+  top: 32px; /* Distancia desde el borde */
+  left: 50%;
   font-size: 13px;
   font-weight: 700;
   color: #ccc;

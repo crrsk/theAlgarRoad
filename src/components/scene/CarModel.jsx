@@ -56,10 +56,7 @@ export default function CarModel({ modelPath, isGarage = false }) {
         child.castShadow = true;
         child.receiveShadow = true;
       }
-      // Skip wheel recentering for models where it breaks placement
-      const isProblematicModel = safeModelPath.includes('Pickup Truck') || safeModelPath.includes('Sports Car');
-
-      if (!isProblematicModel && child.isMesh && child.name.toLowerCase().match(/wheel|tire|rueda|neumatico/)) {
+      if (child.isMesh && child.name.toLowerCase().match(/wheel|tire|rueda|neumatico/)) {
          // Clone geometry so we don't mess up shared geometries across all 4 wheels
          child.geometry = child.geometry.clone();
          
@@ -71,8 +68,9 @@ export default function CarModel({ modelPath, isGarage = false }) {
          // Shift the vertices so the wheel's origin is exactly at its center
          child.geometry.translate(-center.x, -center.y, -center.z);
          
-         // Shift the object's position to compensate, so it stays in the same visual place
-         child.position.add(center);
+         // Shift the object's position to compensate, applying scale and rotation to move in parent space
+         const offset = center.clone().multiply(child.scale).applyQuaternion(child.quaternion);
+         child.position.add(offset);
       }
     });
 
@@ -90,9 +88,6 @@ export default function CarModel({ modelPath, isGarage = false }) {
 
   useFrame((_, delta) => {
      if (GameState.isPaused || GameState.isMenu || GameState.isGameOver || isGarage) return;
-     
-     const isProblematicModel = safeModelPath.includes('Pickup Truck') || safeModelPath.includes('Sports Car');
-     if (isProblematicModel) return;
 
      wheelsRef.current.forEach(wheel => {
          // Bloquear ruedas motrices (traseras) si el freno de mano está puesto

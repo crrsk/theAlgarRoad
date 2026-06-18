@@ -21,10 +21,108 @@ export default function ControllableCar() {
   const groupRef = useRef(null);
   const rigidBodyRef = useRef(null);
   const pressedKeysRef = useKeyboardMovement();
+  const slowTimer = useRef(0);
+  const engineAudioRef = useRef(null);
+
+  useEffect(() => {
+    let source;
+    let audioCtx;
+    let gainNode;
+
+    const initAudio = async () => {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const res = await fetch('/sounds/engine.mp3');
+        const arrayBuffer = await res.arrayBuffer();
+        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        
+        // --- Algoritmo Avanzado de Loop Perfecto (Crossfade + Trim) ---
+        const channel0 = audioBuffer.getChannelData(0);
+        let startSample = 0;
+        let endSample = channel0.length - 1;
+        const threshold = 0.015;
+        
+        while (startSample < channel0.length && Math.abs(channel0[startSample]) < threshold) startSample++;
+        while (endSample > 0 && Math.abs(channel0[endSample]) < threshold) endSample--;
+        
+        if (startSample >= endSample) { startSample = 0; endSample = channel0.length - 1; }
+        
+        const N = endSample - startSample + 1;
+        // Crossfade de 400ms o el 25% del archivo (lo que sea menor)
+        const C = Math.floor(Math.min(0.4 * audioBuffer.sampleRate, N * 0.25)); 
+        
+        let finalBuffer;
+        if (N > C * 2) {
+            finalBuffer = audioCtx.createBuffer(audioBuffer.numberOfChannels, N - C, audioBuffer.sampleRate);
+            for (let ch = 0; ch < audioBuffer.numberOfChannels; ch++) {
+                const inData = audioBuffer.getChannelData(ch);
+                const outData = finalBuffer.getChannelData(ch);
+                
+                // 1. Copiar la sección central (sin alteraciones)
+                for (let i = 0; i < N - 2 * C; i++) {
+                    outData[i] = inData[startSample + C + i];
+                }
+                
+                // 2. Crear la región de Crossfade (fusiona el final con el principio)
+                for (let i = 0; i < C; i++) {
+                    const fade = i / C; // Sube de 0 a 1
+                    const fadeOutSample = inData[startSample + N - C + i] * (1 - fade);
+                    const fadeInSample = inData[startSample + i] * fade;
+                    outData[N - 2 * C + i] = fadeOutSample + fadeInSample;
+                }
+            }
+        } else {
+            finalBuffer = audioBuffer;
+        }
+        
+        source = audioCtx.createBufferSource();
+        source.buffer = finalBuffer;
+        source.loop = true;
+        
+        gainNode = audioCtx.createGain();
+        gainNode.gain.value = 0;
+        
+        source.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        source.start();
+        
+        engineAudioRef.current = { source, gainNode, audioCtx };
+      } catch (err) {
+        console.error("Error loading engine audio:", err);
+      }
+    };
+
+    initAudio();
+
+    return () => {
+      try {
+        if (source) source.stop();
+        if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
+      } catch (e) {}
+    };
+  }, []);
 
   useFrame((_, delta) => {
     const group = groupRef.current;
     if (!group) return;
+
+    const audioData = engineAudioRef.current;
+    if (audioData && audioData.audioCtx) {
+      if (GameState.isMenu || GameState.isPaused || GameState.isGameOver) {
+        audioData.gainNode.gain.setTargetAtTime(0, audioData.audioCtx.currentTime, 0.1);
+      } else {
+        if (audioData.audioCtx.state === 'suspended') {
+          audioData.audioCtx.resume();
+        }
+        // Calcular pitch (1.0 base, hasta 2.5 en velocidad máxima)
+        const targetPitch = 1.0 + (GameState.speed / MAX_SPEED) * 1.5;
+        audioData.source.playbackRate.setTargetAtTime(targetPitch, audioData.audioCtx.currentTime, 0.1);
+        
+        // Volumen entre 0.3 (ralentí) y 0.7 (a tope)
+        const targetVol = 0.3 + (GameState.speed / MAX_SPEED) * 0.4;
+        audioData.gainNode.gain.setTargetAtTime(targetVol, audioData.audioCtx.currentTime, 0.1);
+      }
+    }
 
     if (GameState.isMenu || GameState.isPaused) return;
 
@@ -33,10 +131,31 @@ export default function ControllableCar() {
       return;
     }
 
+    // Penalización por ir muy lento O por ir pegado a un coche (tailgating)
+    // distance > 5 significa unos 5 segundos después de arrancar (a 100km/h)
+    if (GameState.distance > 5) {
+      if (GameState.speed <= 11 || GameState.isTailgating) {
+        slowTimer.current += delta;
+        if (slowTimer.current > 5 && !GameState.policeActive) {
+          GameState.policeRequested = true;
+          slowTimer.current = 0;
+        }
+      } else {
+        slowTimer.current = 0;
+      }
+    } else {
+      slowTimer.current = 0;
+    }
+
     const keys = pressedKeysRef.current;
     
+    GameState.isHandbrake = keys.Space;
+    const HANDBRAKE_FORCE = 120; // Freno de mano mucho más agresivo
+    
     // Speed control
-    if (keys.KeyW) {
+    if (keys.Space) {
+      GameState.speed = THREE.MathUtils.lerp(GameState.speed, 0, delta * (HANDBRAKE_FORCE / MAX_SPEED));
+    } else if (keys.KeyW) {
       GameState.speed = THREE.MathUtils.lerp(GameState.speed, MAX_SPEED, delta * (ACCEL / MAX_SPEED));
     } else if (keys.KeyS) {
       GameState.speed = THREE.MathUtils.lerp(GameState.speed, 0, delta * (BRAKE / MAX_SPEED));
@@ -82,9 +201,14 @@ export default function ControllableCar() {
     group.rotation.z = THREE.MathUtils.lerp(group.rotation.z, -targetTilt, delta * 10);
     
     // Yaw - apply to visual group only
-    const targetYaw = steerDir * 0.2;
+    // Efecto de derrape (Drift) si el freno de mano está activo
+    let targetYaw = steerDir * 0.2;
+    if (GameState.isHandbrake && isMoving) {
+        targetYaw = steerDir * 0.65;
+    }
+    
     // Assuming car in .glb faces +Z, we rotate by Math.PI to make it face -Z (away from camera)
-    group.rotation.y = THREE.MathUtils.lerp(group.rotation.y, -targetYaw + Math.PI, delta * 8);
+    group.rotation.y = THREE.MathUtils.lerp(group.rotation.y, -targetYaw + Math.PI, delta * (GameState.isHandbrake ? 12 : 8));
   });
 
   const handleCollision = (e) => {
@@ -99,6 +223,11 @@ export default function ControllableCar() {
     
     // If it hits a traffic car, trigger Game Over
     GameState.isGameOver = true;
+    if (otherName === "police_car") {
+      GameState.gameOverReason = 'police';
+    } else {
+      GameState.gameOverReason = 'crash';
+    }
   };
 
   return (

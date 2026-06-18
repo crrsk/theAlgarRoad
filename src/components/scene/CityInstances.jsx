@@ -9,7 +9,7 @@ export function BuildingInstance({ data }) {
   useFrame((_, delta) => {
     if (!ref.current || GameState.isMenu || GameState.isGameOver || GameState.isPaused) return;
     ref.current.position.z += GameState.speed * delta;
-    if (ref.current.position.z > 5) ref.current.position.z -= data.loopLength;
+    if (ref.current.position.z > 18) ref.current.position.z -= data.loopLength;
   });
 
   return (
@@ -29,7 +29,7 @@ export function WindowInstance({ data }) {
   useFrame((_, delta) => {
     if (!ref.current || GameState.isMenu || GameState.isGameOver || GameState.isPaused) return;
     ref.current.position.z += GameState.speed * delta;
-    if (ref.current.position.z > 5 + data.zOffset) {
+    if (ref.current.position.z > 18 + data.zOffset) {
       ref.current.position.z -= data.loopLength;
     }
   });
@@ -49,7 +49,7 @@ export function TreePineInstance({ data }) {
   useFrame((_, delta) => {
     if (!ref.current || GameState.isMenu || GameState.isGameOver || GameState.isPaused) return;
     ref.current.position.z += GameState.speed * delta;
-    if (ref.current.position.z > 5) ref.current.position.z -= data.loopLength;
+    if (ref.current.position.z > 18) ref.current.position.z -= data.loopLength;
   });
 
   return (
@@ -67,7 +67,7 @@ export function TreeRoundInstance({ data }) {
   useFrame((_, delta) => {
     if (!ref.current || GameState.isMenu || GameState.isGameOver || GameState.isPaused) return;
     ref.current.position.z += GameState.speed * delta;
-    if (ref.current.position.z > 5) ref.current.position.z -= data.loopLength;
+    if (ref.current.position.z > 18) ref.current.position.z -= data.loopLength;
   });
 
   return (
@@ -85,7 +85,7 @@ export function StreetLightPoleInstance({ data }) {
   useFrame((_, delta) => {
     if (!ref.current || GameState.isMenu || GameState.isGameOver || GameState.isPaused) return;
     ref.current.position.z += GameState.speed * delta;
-    if (ref.current.position.z > 5) ref.current.position.z -= data.loopLength;
+    if (ref.current.position.z > 18) ref.current.position.z -= data.loopLength;
   });
 
   return (

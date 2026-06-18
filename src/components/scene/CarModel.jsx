@@ -80,6 +80,12 @@ export default function CarModel() {
 
   useFrame((_, delta) => {
      wheelsRef.current.forEach(wheel => {
+         // Bloquear ruedas motrices (traseras) si el freno de mano está puesto
+         // Asumimos que la trasera del coche es la parte negativa del eje Z local
+         if (GameState.isHandbrake && wheel.position.z < 0) {
+             return;
+         }
+         
          // Assuming rotation on X moves the wheel forward
          wheel.rotation.x -= GameState.speed * delta * 2;
      });

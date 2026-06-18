@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-const MOVEMENT_CODES = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD']);
+const MOVEMENT_CODES = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space']);
 
 function shouldIgnoreKeyboardEvent(event) {
   const tagName = event.target?.tagName;
@@ -22,6 +22,7 @@ export function useKeyboardMovement() {
     KeyD: false,
     KeyS: false,
     KeyW: false,
+    Space: false,
   });
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export function useKeyboardMovement() {
         KeyD: false,
         KeyS: false,
         KeyW: false,
+        Space: false,
       };
     };
 

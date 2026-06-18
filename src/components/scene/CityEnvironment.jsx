@@ -165,8 +165,8 @@ export default function CityEnvironment({ theme }) {
 
   useFrame((_, delta) => {
     if (GameState.isGameOver || GameState.isPaused) return;
-    roadTexture.offset.y -= GameState.speed * delta * 0.1;
-    sidewalkTexture.offset.y -= GameState.speed * delta * 0.1;
+    roadTexture.offset.y += GameState.speed * delta * 0.1;
+    sidewalkTexture.offset.y += GameState.speed * delta * 0.1;
   });
 
   const isNightOrGolden = theme.type === 'night' || theme.type === 'golden';

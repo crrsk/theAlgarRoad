@@ -115,7 +115,7 @@ export default function App() {
     };
 
     const handleVisibilityChange = () => {
-      if (document.hidden && !GameState.isGameOver) {
+      if (document.hidden && !GameState.isGameOver && !GameState.isMenu) {
         GameState.isPaused = true;
       }
     };
@@ -158,7 +158,7 @@ export default function App() {
       {isMenu && (
         <div className="main-menu-overlay">
           <div className="main-menu-modal">
-            <h1 className="main-menu-title">The Algar Road</h1>
+            <h1 className="main-menu-title">THE ALGAR ROAD</h1>
 
             <div className="controls-info">
               <div className="control-row">
@@ -171,10 +171,13 @@ export default function App() {
                 <kbd>S</kbd> <span>Frenar</span>
               </div>
               <div className="control-row">
-                <kbd className="kbd-space">Espacio</kbd> <span>Freno de mano / Derrape</span>
+                <kbd className="kbd-space">Espacio</kbd> <span>Freno de mano</span>
+              </div>
+              <div className="control-row">
+                <kbd className="kbd-esc">ESC</kbd> <span>Pausa/Reanudar</span>
               </div>
             </div>
-            
+
             {renderVolumeControl()}
 
             <button type="button" onClick={handleStartGame} className="play-btn">
@@ -197,7 +200,7 @@ export default function App() {
         </div>
       )}
 
-      {isPaused && !isGameOver && (
+      {isPaused && !isGameOver && !isMenu && (
         <div className="pause-overlay">
           <div className="pause-modal">
             <h1>Juego en Pausa</h1>

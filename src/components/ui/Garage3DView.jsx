@@ -15,7 +15,7 @@ function RotatingCar({ modelPath }) {
 
   return (
     <group ref={groupRef} position={[0, -0.5, 0]}>
-      <CarModel modelPath={modelPath} />
+      <CarModel modelPath={modelPath} isGarage={true} />
     </group>
   );
 }

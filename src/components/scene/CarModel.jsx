@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { GameState } from '../../gameState';
 import { CARS_CONFIG } from '../../utils/carsConfig';
 
-export default function CarModel({ modelPath }) {
+export default function CarModel({ modelPath, isGarage = false }) {
   // Use a default fallback if modelPath is undefined for some reason during initial render
   const safeModelPath = modelPath || '/car.glb';
   const { scene: originalScene } = useGLTF(safeModelPath);
@@ -89,6 +89,11 @@ export default function CarModel({ modelPath }) {
   }, [scene]);
 
   useFrame((_, delta) => {
+     if (GameState.isPaused || GameState.isMenu || GameState.isGameOver || isGarage) return;
+     
+     const isProblematicModel = safeModelPath.includes('Pickup Truck') || safeModelPath.includes('Sports Car');
+     if (isProblematicModel) return;
+
      wheelsRef.current.forEach(wheel => {
          // Bloquear ruedas motrices (traseras) si el freno de mano está puesto
          // Asumimos que la trasera del coche es la parte negativa del eje Z local

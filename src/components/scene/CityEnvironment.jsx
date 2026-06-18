@@ -8,11 +8,11 @@ import { GameState } from '../../gameState';
 
 const BUILDING_PALETTE = [0x3b4350, 0x46505f, 0x2f3948, 0x56606b, 0x394a5a];
 const DISTANT_PALETTE = [0x485564, 0x596775, 0x3f4d5d];
-const BUILDING_LOOP_LENGTH = 42;
+const BUILDING_LOOP_LENGTH = 55;
 const ROAD_WIDTH = 4.6;
 const SIDEWALK_WIDTH = 1.35;
 const SIDEWALK_X = ROAD_WIDTH / 2 + SIDEWALK_WIDTH / 2 + 0.25;
-const BUILDING_START_X = ROAD_WIDTH / 2 + SIDEWALK_WIDTH + 2;
+const SIDEWALK_EDGE_X = ROAD_WIDTH / 2 + SIDEWALK_WIDTH;
 
 function createSideBuildings() {
   const sides = [-1, 1];
@@ -23,49 +23,43 @@ function createSideBuildings() {
       Array.from({ length: 6 }, (_, index) => {
         const seed = Math.abs(side * 31 + lane * 17 + index * 5);
 
-        // Dejar un 20% de solares vacíos en las filas de atrás para mayor realismo
-        if (lane > 0 && seed % 5 === 0) {
-          // Llenar el solar vacío con 1 o 2 árboles para que no se vea desierto
-          return Array.from({ length: (seed % 2) + 1 }, (_, treeIdx) => ({
-            isTree: true,
-            seed: seed + treeIdx,
-            loopLength: BUILDING_LOOP_LENGTH,
-            position: [
-              side * (BUILDING_START_X + lane * 2.5 + ((index + lane) % 2) * 0.5 + (treeIdx * 1.5 - 0.75)),
-              -0.66,
-              -4.8 - index * 4.0 - lane * 1.05 + (Math.random() * 1.5 - 0.75)
-            ],
-          }));
-        }
+        const width = 3.5 + (seed % 4) * 1.0;
+        const xOffset = SIDEWALK_EDGE_X + 0.8 + (width / 2) + lane * 7.5 + ((index + lane) % 2) * 0.4;
 
         return {
           isTree: false,
           color: BUILDING_PALETTE[(index + lane + seed) % BUILDING_PALETTE.length],
-          depth: 1.5 + (seed % 3) * 0.5,
-          height: 6 + lane * 2 + (seed % 5) * 1.0,
+          depth: 2.5 + (seed % 3) * 1.0,
+          height: 8 + lane * 4 + (seed % 5) * 1.5,
           loopLength: BUILDING_LOOP_LENGTH,
-          rotation: side * -0.045 + (seed % 3 === 0 ? (Math.random() * 0.1 - 0.05) : 0),
+          rotation: 0,
           seed,
-          width: 1.5 + (seed % 4) * 0.5,
-          x: side * (BUILDING_START_X + lane * 2.5 + ((index + lane) % 2) * 0.5),
-          z: -4.8 - index * 4.0 - lane * 1.05,
+          width,
+          x: side * xOffset,
+          z: -4.8 - index * 6.0 - lane * 1.5,
         };
       }).flat()
     ))
   )).filter(Boolean);
 }
 
-function createStreetTrees() {
+function createGapTrees() {
   const sides = [-1, 1];
   return sides.flatMap((side) => (
-    Array.from({ length: 12 }, (_, index) => {
-      const seed = Math.abs(side * 42 + index * 7);
-      // Mantener los árboles estrictamente cerca de la acera para que no atraviesen los edificios
-      const xOffset = Math.random() * 0.4; 
+    Array.from({ length: 22 }, (_, index) => {
+      const seed = Math.abs(side * 88 + index * 19);
+      // El bloque de edificios termina en z = -38 aprox. El siguiente empieza en z = -55
+      // Repartimos los árboles en este hueco (z entre -39 y -54)
+      const zOffset = -39 - (index * 0.65) - (Math.random() * 0.5);
+      
+      // Esparcirlos a lo ancho desde la acera hacia adentro
+      const xOffset = side * (3.8 + Math.random() * 5.0);
+      
       return {
+        isTree: true,
         seed,
         loopLength: BUILDING_LOOP_LENGTH,
-        position: [side * (SIDEWALK_X + 0.4 + xOffset), -0.66, -index * 4.0],
+        position: [xOffset, -0.66, zOffset],
       };
     })
   ));
@@ -74,7 +68,7 @@ function createStreetTrees() {
 function createStreetLights() {
   const sides = [-1, 1];
   return sides.flatMap((side) => (
-    Array.from({ length: 6 }, (_, index) => {
+    Array.from({ length: 8 }, (_, index) => {
       return {
         side,
         loopLength: BUILDING_LOOP_LENGTH,
@@ -85,22 +79,22 @@ function createStreetLights() {
 }
 
 function createDistantBuildings() {
-  return Array.from({ length: 13 }, (_, index) => {
-    const center = index - 6;
+  return Array.from({ length: 19 }, (_, index) => {
+    const center = index - 9;
     const seed = index * 9 + 3;
 
     return {
       color: DISTANT_PALETTE[index % DISTANT_PALETTE.length],
-      depth: 1.5,
-      height: 12 + (seed % 6) * 2,
+      depth: 2.5,
+      height: 18 + (seed % 6) * 3,
       loopLength: BUILDING_LOOP_LENGTH,
       rotation: 0,
       seed,
-      width: 1.8 + (seed % 4) * 0.5,
-      x: center * 3.0,
-      z: -25.0 - (index % 3) * 1.5,
+      width: 4.0 + (seed % 4) * 1.0,
+      x: center * 8.0,
+      z: -35.0 - (index % 3) * 2.0,
     };
-  }).filter((building) => Math.abs(building.x) > 4);
+  }).filter((building) => Math.abs(building.x) - building.width / 2 > SIDEWALK_EDGE_X + 1.0);
 }
 
 export default function CityEnvironment({ theme }) {
@@ -117,15 +111,16 @@ export default function CityEnvironment({ theme }) {
   
   const allWindows = useMemo(() => {
     return buildings.flatMap(building => {
-      const windowRows = Math.max(3, Math.floor(building.height / 0.48));
-      const windowColumns = Math.max(2, Math.floor(building.width / 0.34));
+      const windowRows = Math.max(3, Math.floor(building.height / 1.2));
+      const windowColumns = Math.max(2, Math.floor(building.width / 0.8));
       
       return Array.from({ length: windowRows }, (_, row) => (
         Array.from({ length: windowColumns }, (_, column) => {
+          if (row === 0) return null; // Skip ground floor windows for realism
           if ((row + column + building.seed) % 3 === 0) return null;
           
-          const localX = ((column + 0.5) / windowColumns - 0.5) * building.width * 0.72;
-          const localY = (row + 0.5) * 0.42 - building.height / 2 + 0.25;
+          const localX = ((column + 0.5) / windowColumns - 0.5) * building.width * 0.8;
+          const localY = (row + 0.5) * 1.2 - building.height / 2 + 0.5;
           const localZ = building.depth / 2 + 0.006;
           
           const cos = Math.cos(building.rotation);
@@ -147,13 +142,10 @@ export default function CityEnvironment({ theme }) {
   }, [buildings]);
 
   const trees = useMemo(() => {
-    const rawTrees = [
-      ...allBlocks.filter(b => b.isTree),
-      ...createStreetTrees(),
-    ];
+    const rawTrees = createGapTrees();
     return rawTrees.map(t => ({
       ...t,
-      scale: 0.8 + (t.seed % 5) * 0.1,
+      scale: 0.7 + (t.seed % 5) * 0.1,
       isPine: t.seed % 2 === 0
     }));
   }, [allBlocks]);
@@ -208,8 +200,8 @@ export default function CityEnvironment({ theme }) {
       </Instances>
 
       {/* INSTANCED WINDOWS */}
-      <Instances limit={1500}>
-        <planeGeometry args={[0.08, 0.16]} />
+      <Instances limit={3500}>
+        <planeGeometry args={[0.25, 0.45]} />
         <meshStandardMaterial color={0xffe6a3} emissive={0xffc35a} emissiveIntensity={theme.buildingLight} toneMapped={false} />
         {allWindows.map((w, i) => <WindowInstance key={i} data={w} />)}
       </Instances>
@@ -217,28 +209,60 @@ export default function CityEnvironment({ theme }) {
       {/* INSTANCED PINE TREES */}
       <group>
         <Instances limit={100} castShadow>
-          <cylinderGeometry args={[0.1, 0.15, 1, 5]} />
+          <cylinderGeometry args={[0.1, 0.15, 1, 6]} />
           <meshStandardMaterial color={0x3d2817} roughness={0.9} />
-          {pineTrees.map((t, i) => <TreePineInstance key={`trunk-${i}`} data={{...t, position: [t.position[0], t.position[1] + 0.5, t.position[2]]}} />)}
+          {pineTrees.map((t, i) => <TreePineInstance key={`trunk-${i}`} data={{...t, position: [t.position[0], t.position[1] + 0.5 * t.scale, t.position[2]]}} />)}
         </Instances>
+        {/* Tier 1 (Base) */}
         <Instances limit={100} castShadow>
-          <coneGeometry args={[0.8, 2.5, 5]} />
+          <coneGeometry args={[0.85, 1.5, 7]} />
           <meshStandardMaterial color={0x1e3f20} roughness={0.8} />
-          {pineTrees.map((t, i) => <TreePineInstance key={`leaves-${i}`} data={{...t, position: [t.position[0], t.position[1] + 2, t.position[2]]}} />)}
+          {pineTrees.map((t, i) => <TreePineInstance key={`leaves-1-${i}`} data={{...t, position: [t.position[0], t.position[1] + 1.3 * t.scale, t.position[2]]}} />)}
+        </Instances>
+        {/* Tier 2 (Middle) */}
+        <Instances limit={100} castShadow>
+          <coneGeometry args={[0.65, 1.3, 7]} />
+          <meshStandardMaterial color={0x1e3f20} roughness={0.8} />
+          {pineTrees.map((t, i) => <TreePineInstance key={`leaves-2-${i}`} data={{...t, position: [t.position[0], t.position[1] + 2.0 * t.scale, t.position[2]]}} />)}
+        </Instances>
+        {/* Tier 3 (Top) */}
+        <Instances limit={100} castShadow>
+          <coneGeometry args={[0.45, 1.1, 7]} />
+          <meshStandardMaterial color={0x1e3f20} roughness={0.8} />
+          {pineTrees.map((t, i) => <TreePineInstance key={`leaves-3-${i}`} data={{...t, position: [t.position[0], t.position[1] + 2.7 * t.scale, t.position[2]]}} />)}
         </Instances>
       </group>
 
       {/* INSTANCED ROUND TREES */}
       <group>
         <Instances limit={100} castShadow>
-          <cylinderGeometry args={[0.1, 0.15, 1, 5]} />
+          <cylinderGeometry args={[0.12, 0.18, 1.2, 6]} />
           <meshStandardMaterial color={0x3d2817} roughness={0.9} />
-          {roundTrees.map((t, i) => <TreeRoundInstance key={`trunk-${i}`} data={{...t, position: [t.position[0], t.position[1] + 0.5, t.position[2]]}} />)}
+          {roundTrees.map((t, i) => <TreeRoundInstance key={`trunk-${i}`} data={{...t, position: [t.position[0], t.position[1] + 0.6 * t.scale, t.position[2]]}} />)}
         </Instances>
+        {/* Main Cluster */}
         <Instances limit={100} castShadow>
           <dodecahedronGeometry args={[1, 0]} />
           <meshStandardMaterial color={0x2d4c2b} roughness={0.8} />
-          {roundTrees.map((t, i) => <TreeRoundInstance key={`leaves-${i}`} data={{...t, position: [t.position[0], t.position[1] + 1.8, t.position[2]]}} />)}
+          {roundTrees.map((t, i) => <TreeRoundInstance key={`leaves-main-${i}`} data={{...t, position: [t.position[0], t.position[1] + 1.8 * t.scale, t.position[2]]}} />)}
+        </Instances>
+        {/* Side Cluster 1 */}
+        <Instances limit={100} castShadow>
+          <dodecahedronGeometry args={[0.7, 0]} />
+          <meshStandardMaterial color={0x2d4c2b} roughness={0.8} />
+          {roundTrees.map((t, i) => <TreeRoundInstance key={`leaves-side1-${i}`} data={{...t, position: [t.position[0] + 0.5 * t.scale, t.position[1] + 1.5 * t.scale, t.position[2] + 0.3 * t.scale]}} />)}
+        </Instances>
+        {/* Side Cluster 2 */}
+        <Instances limit={100} castShadow>
+          <dodecahedronGeometry args={[0.65, 0]} />
+          <meshStandardMaterial color={0x2d4c2b} roughness={0.8} />
+          {roundTrees.map((t, i) => <TreeRoundInstance key={`leaves-side2-${i}`} data={{...t, position: [t.position[0] - 0.4 * t.scale, t.position[1] + 1.6 * t.scale, t.position[2] - 0.4 * t.scale]}} />)}
+        </Instances>
+        {/* Top Cluster */}
+        <Instances limit={100} castShadow>
+          <dodecahedronGeometry args={[0.55, 0]} />
+          <meshStandardMaterial color={0x2d4c2b} roughness={0.8} />
+          {roundTrees.map((t, i) => <TreeRoundInstance key={`leaves-top-${i}`} data={{...t, position: [t.position[0] + 0.1 * t.scale, t.position[1] + 2.4 * t.scale, t.position[2] - 0.2 * t.scale]}} />)}
         </Instances>
       </group>
 

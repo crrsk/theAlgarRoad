@@ -12,9 +12,6 @@ const MOVEMENT_BOUNDS = {
 };
 
 const STEERING_SPEED = 5.5; // Mejor giro a altas velocidades
-const MAX_SPEED = 30; // 30 * 10 = 300 km/h
-const ACCEL = 25; // Alta aceleración (muchos caballos)
-const BRAKE = 50; // Frenos de alto rendimiento
 const FRICTION = 8; // Fricción y resistencia del aire
 
 export default function ControllableCar() {
@@ -114,12 +111,15 @@ export default function ControllableCar() {
         if (audioData.audioCtx.state === 'suspended') {
           audioData.audioCtx.resume();
         }
+        
+        const rawMaxSpeedAudio = GameState.selectedCar.maxSpeed / 10;
+        
         // Calcular pitch (1.0 base, hasta 2.5 en velocidad máxima)
-        const targetPitch = 1.0 + (GameState.speed / MAX_SPEED) * 1.5;
+        const targetPitch = 1.0 + (GameState.speed / rawMaxSpeedAudio) * 1.5;
         audioData.source.playbackRate.setTargetAtTime(targetPitch, audioData.audioCtx.currentTime, 0.1);
         
         // Volumen entre 0.3 (ralentí) y 0.7 (a tope)
-        const targetVol = 0.3 + (GameState.speed / MAX_SPEED) * 0.4;
+        const targetVol = 0.3 + (GameState.speed / rawMaxSpeedAudio) * 0.4;
         audioData.gainNode.gain.setTargetAtTime(targetVol, audioData.audioCtx.currentTime, 0.1);
       }
     }
@@ -153,14 +153,16 @@ export default function ControllableCar() {
     const HANDBRAKE_FORCE = 120; // Freno de mano mucho más agresivo
     
     // Speed control
+    const rawMaxSpeed = GameState.selectedCar.maxSpeed / 10;
+    
     if (keys.Space) {
-      GameState.speed = THREE.MathUtils.lerp(GameState.speed, 0, delta * (HANDBRAKE_FORCE / MAX_SPEED));
+      GameState.speed = THREE.MathUtils.lerp(GameState.speed, 0, delta * (HANDBRAKE_FORCE / rawMaxSpeed));
     } else if (keys.KeyW) {
-      GameState.speed = THREE.MathUtils.lerp(GameState.speed, MAX_SPEED, delta * (ACCEL / MAX_SPEED));
+      GameState.speed = THREE.MathUtils.lerp(GameState.speed, rawMaxSpeed, delta * (GameState.selectedCar.acceleration / rawMaxSpeed));
     } else if (keys.KeyS) {
-      GameState.speed = THREE.MathUtils.lerp(GameState.speed, 0, delta * (BRAKE / MAX_SPEED));
+      GameState.speed = THREE.MathUtils.lerp(GameState.speed, 0, delta * (GameState.selectedCar.braking / rawMaxSpeed));
     } else {
-      GameState.speed = THREE.MathUtils.lerp(GameState.speed, 0, delta * (FRICTION / MAX_SPEED));
+      GameState.speed = THREE.MathUtils.lerp(GameState.speed, 0, delta * (FRICTION / rawMaxSpeed));
     }
 
     // Steering control
@@ -171,7 +173,7 @@ export default function ControllableCar() {
       // Dynamic steering using velocity
       if (rigidBodyRef.current) {
           const linvel = rigidBodyRef.current.linvel();
-          const targetVelX = steerDir * 15 * (GameState.speed / MAX_SPEED);
+          const targetVelX = steerDir * 15 * (GameState.speed / rawMaxSpeed);
           linvel.x = THREE.MathUtils.lerp(linvel.x, targetVelX, delta * STEERING_SPEED * 3);
           rigidBodyRef.current.setLinvel(linvel);
       }
@@ -244,7 +246,7 @@ export default function ControllableCar() {
     >
       <group ref={groupRef} rotation={[0, Math.PI, 0]}>
         <Suspense fallback={null}>
-          <CarModel />
+          <CarModel modelPath={GameState.selectedCar.model} />
         </Suspense>
       </group>
     </RigidBody>

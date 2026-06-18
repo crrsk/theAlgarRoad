@@ -378,3 +378,445 @@ kbd {
 .volume-slider::-webkit-slider-thumb:hover {
   background: #fff;
 }
+
+/* --- Player Profile & Name Input UI --- */
+
+.name-input-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: url('/algar_road_bg.png') center/cover no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.name-input-modal {
+  background: rgba(10, 12, 20, 0.95);
+  padding: 4rem 5rem;
+  border: 6px solid #f9ca24;
+  border-radius: 0;
+  text-align: center;
+  color: white;
+  box-shadow: 16px 16px 0px rgba(0, 0, 0, 0.8);
+}
+
+.name-input-modal h1 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #f9ca24;
+  text-shadow: 3px 3px 0 #000;
+}
+
+.name-input-modal p {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+  color: #e2e8f0;
+}
+
+.name-input-modal input {
+  display: block;
+  margin: 0 auto 2rem auto;
+  padding: 1rem;
+  font-size: 1.5rem;
+  font-family: 'Press Start 2P', cursive;
+  text-transform: uppercase;
+  text-align: center;
+  border: 4px solid #fff;
+  background: #1a1a24;
+  color: #00f2fe;
+  outline: none;
+  width: 80%;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.8);
+}
+
+.name-input-modal input:focus {
+  border-color: #00f2fe;
+}
+
+.profile-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1a1a24;
+  padding: 1rem 1.5rem;
+  border: 4px solid #f9ca24;
+  margin: 0 auto 2rem auto;
+  max-width: 450px;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.8);
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.profile-name {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1.2rem;
+  color: #f9ca24;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.edit-name-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0;
+  transition: transform 0.2s;
+}
+
+.edit-name-btn:hover {
+  transform: scale(1.2);
+}
+
+.edit-name-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-name-form input {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1rem;
+  padding: 0.5rem;
+  text-transform: uppercase;
+  border: 2px solid #fff;
+  background: #000;
+  color: #fff;
+  width: 150px;
+}
+
+.edit-name-form button {
+  font-family: 'Press Start 2P', cursive;
+  background: #f9ca24;
+  color: #000;
+  border: 2px solid #fff;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.edit-name-form button:hover {
+  background: #fff;
+}
+
+.profile-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: right;
+  font-family: 'Press Start 2P', cursive;
+}
+
+.profile-level {
+  font-size: 0.8rem;
+  color: #00f2fe;
+}
+
+.profile-xp {
+  font-size: 0.7rem;
+  color: #a5b4fc;
+}
+
+.xp-gain-info {
+  margin-bottom: 2rem;
+  font-family: 'Press Start 2P', cursive;
+}
+
+.xp-text {
+  color: #f9ca24 !important;
+  font-size: 1.2rem !important;
+  animation: pulse 1s infinite alternate;
+}
+
+.level-up-text {
+  color: #00f2fe !important;
+  font-size: 1.5rem !important;
+  margin-top: 1rem !important;
+  animation: pulseFast 0.5s infinite alternate;
+}
+
+@keyframes pulse {
+  from { transform: scale(1); text-shadow: 0 0 5px #f9ca24; }
+  to { transform: scale(1.1); text-shadow: 0 0 15px #f9ca24; }
+}
+
+@keyframes pulseFast {
+  from { transform: scale(1); text-shadow: 0 0 10px #00f2fe; }
+  to { transform: scale(1.2); text-shadow: 0 0 25px #00f2fe; }
+}
+
+/* --- Garage UI --- */
+
+.garage-btn {
+  margin-right: 1.5rem;
+  background: #f9ca24 !important;
+  color: #000 !important;
+}
+
+.garage-btn:hover {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+.garage-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.garage-modal {
+  background: #1a1a24;
+  padding: 3rem;
+  border: 4px solid #f9ca24;
+  width: 80%;
+  max-width: 1000px;
+  max-height: 85vh;
+  overflow-y: auto;
+  text-align: center;
+  box-shadow: 12px 12px 0 rgba(0,0,0,0.8);
+}
+
+.garage-modal h1 {
+  font-family: 'Press Start 2P', cursive;
+  color: #f9ca24;
+  margin-bottom: 1rem;
+}
+
+.garage-modal p {
+  color: #e2e8f0;
+  margin-bottom: 2rem;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8rem;
+}
+
+.garage-3d-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.garage-nav-btn {
+  background: rgba(0, 242, 254, 0.2);
+  color: #00f2fe;
+  border: 4px solid #00f2fe;
+  font-size: 2rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 100px;
+}
+
+.garage-nav-btn:hover {
+  background: #00f2fe;
+  color: #000;
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.8);
+}
+
+.garage-center-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 0 2rem;
+}
+
+.garage-3d-container {
+  width: 100%;
+  height: 350px;
+  background: radial-gradient(circle, rgba(26,26,36,1) 0%, rgba(0,0,0,1) 100%);
+  border: 4px solid #333;
+  box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+}
+
+.garage-car-info {
+  width: 100%;
+  text-align: left;
+}
+
+.car-details {
+  background: rgba(0, 0, 0, 0.8);
+  border: 4px solid #333;
+  padding: 1.5rem;
+}
+
+.car-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #555;
+  padding-bottom: 1rem;
+}
+
+.car-details h2 {
+  font-family: 'Orbitron', sans-serif;
+  color: #fff;
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.select-car-btn {
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  font-size: 1.2rem;
+}
+
+.select-car-btn.locked {
+  background: #333;
+  color: #888;
+  border-color: #555;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.select-car-btn.locked:hover {
+  transform: none;
+}
+
+.large-stats .stat-row {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.large-stats .stat-bar {
+  height: 12px;
+}
+
+.lock-icon {
+  color: #ff4b2b;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.selected-icon {
+  font-size: 1.2rem;
+}
+
+.stat-row {
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.9rem;
+  color: #a5b4fc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stat-bar {
+  width: 100%;
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.stat-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00f2fe, #4facfe);
+}
+
+.car-card.locked .stat-fill {
+  background: #666;
+}
+
+.close-btn {
+  background: transparent;
+  color: #fff;
+  border: 4px solid #fff;
+  padding: 1rem 3rem;
+  font-family: 'Press Start 2P', cursive;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: #fff;
+  color: #000;
+}
+
+/* --- XP Progress UI --- */
+
+.xp-progress-container {
+  margin-top: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.xp-progress-bar {
+  width: 100%;
+  height: 12px;
+  background: #333;
+  border: 2px solid #555;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.xp-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f9ca24, #f0932b);
+  transition: width 0.5s ease-out;
+}
+
+.xp-progress-text {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.8rem !important;
+  color: #a5b4fc !important;
+  margin: 0 !important;
+}
+
+.xp-particle {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: #f9ca24;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #f0932b;
+  opacity: 0;
+  pointer-events: none;
+  animation: particleFly 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  z-index: 10;
+}
+
+@keyframes particleFly {
+  0% {
+    transform: translate(-50%, 0) scale(0);
+    opacity: 1;
+  }
+  30% {
+    transform: translate(calc(-50% + var(--mid-x)), var(--mid-y)) scale(1.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--end-x)), var(--end-y)) scale(0.2);
+    opacity: 0;
+  }
+}

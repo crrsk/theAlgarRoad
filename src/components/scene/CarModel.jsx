@@ -3,9 +3,12 @@ import { useEffect, useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { GameState } from '../../gameState';
+import { CARS_CONFIG } from '../../utils/carsConfig';
 
-export default function CarModel() {
-  const { scene: originalScene } = useGLTF('/car.glb');
+export default function CarModel({ modelPath }) {
+  // Use a default fallback if modelPath is undefined for some reason during initial render
+  const safeModelPath = modelPath || '/car.glb';
+  const { scene: originalScene } = useGLTF(safeModelPath);
   const wheelsRef = useRef([]);
 
   const scene = useMemo(() => {
@@ -39,17 +42,24 @@ export default function CarModel() {
        lowestY = box2.min.y;
     }
 
-    // Since the cloned scene is not attached to any parent yet, world coordinates are local.
-    // We can directly offset the position to make the lowest point rest exactly at local Y = 0.
     // This completely avoids the production bug where parent matrices are stale during useEffect.
     cloned.position.y -= lowestY;
+    
+    // Apply rotation offset if the model came inverted from factory (e.g. Red Car)
+    const config = CARS_CONFIG.find(c => c.model === safeModelPath);
+    if (config && config.rotationOffset) {
+      cloned.rotation.y = config.rotationOffset;
+    }
     
     cloned.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = true;
         child.receiveShadow = true;
       }
-      if (child.isMesh && child.name.toLowerCase().match(/wheel|tire|rueda|neumatico/)) {
+      // Skip wheel recentering for models where it breaks placement
+      const isProblematicModel = safeModelPath.includes('Pickup Truck') || safeModelPath.includes('Sports Car');
+
+      if (!isProblematicModel && child.isMesh && child.name.toLowerCase().match(/wheel|tire|rueda|neumatico/)) {
          // Clone geometry so we don't mess up shared geometries across all 4 wheels
          child.geometry = child.geometry.clone();
          
@@ -94,4 +104,7 @@ export default function CarModel() {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('/car.glb');
+// Preload all cars to avoid hitches when swapping in the garage
+CARS_CONFIG.forEach(car => {
+  useGLTF.preload(car.model);
+});

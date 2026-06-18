@@ -12,6 +12,11 @@ export const GameState = {
   isHandbrake: false,
   bgmVolume: 1.0,
   bgmMuted: false,
+  selectedCar: {
+    maxSpeed: 30, // Default 300 km/h (Algar Beast)
+    acceleration: 25,
+    braking: 50,
+  },
   reset() {
     this.speed = 0;
     this.isMenu = false;

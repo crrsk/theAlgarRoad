@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { GameState } from '../../gameState';
 import { CARS_CONFIG } from '../../utils/carsConfig';
+import Headlights from './Headlights';
 
 export default function CarModel({ modelPath, isGarage = false }) {
   // Use a default fallback if modelPath is undefined for some reason during initial render
@@ -74,8 +75,72 @@ export default function CarModel({ modelPath, isGarage = false }) {
       }
     });
 
+    cloned.updateMatrixWorld(true);
+    
+    // Calculamos el Bounding Box muy estricto y apagamos luces nativas
+    const finalBox = new THREE.Box3();
+    cloned.traverse((child) => {
+      // 1. Si el modelo traía una luz de fábrica (faros horteras de Blender), la destruimos
+      if (child.isLight) {
+         child.intensity = 0;
+         child.visible = false;
+         child.castShadow = false;
+      }
+      
+      // 2. Solo usamos mallas 100% visibles y opacas para la chapa del coche
+      if (child.isMesh && child.visible && (!child.material || child.material.transparent !== true)) {
+        const name = child.name.toLowerCase();
+        // Filtramos cajas de colisión y planos de sombra
+        if (!name.includes('shadow') && !name.includes('plane') && !name.includes('ground') && !name.includes('bound')) {
+          if (!child.geometry.boundingBox) child.geometry.computeBoundingBox();
+          const worldBox = child.geometry.boundingBox.clone().applyMatrix4(child.matrixWorld);
+          finalBox.union(worldBox);
+        }
+      }
+      
+      // 3. Identificar las luces traseras y delanteras nativas del modelo para animarlas en la noche
+      if (child.isMesh && child.material) {
+        const meshName = child.name.toLowerCase();
+        const matName = child.material.name ? child.material.name.toLowerCase() : '';
+        
+        const isLight = meshName.includes('light') || matName.includes('light') || meshName.includes('lamp') || matName.includes('faro') || matName.includes('glass') || meshName.includes('glass');
+        const isRear = meshName.includes('tail') || meshName.includes('rear') || meshName.includes('brake') || meshName.includes('back') || matName.includes('tail') || matName.includes('rear') || matName.includes('freno') || meshName.includes('freno');
+        const isFront = meshName.includes('head') || meshName.includes('front') || matName.includes('head') || matName.includes('delanter') || meshName.includes('delanter');
+        
+        const isRedEmissive = child.material.emissive && child.material.emissive.r > 0.5 && child.material.emissive.g < 0.2;
+        const isWhiteEmissive = child.material.emissive && child.material.emissive.r > 0.8 && child.material.emissive.g > 0.8 && child.material.emissive.b > 0.8;
+        
+        if ((isLight && isRear) || isRedEmissive) {
+            child.material = child.material.clone();
+            child.material.emissive = new THREE.Color(0xff0000);
+            child.material.emissiveIntensity = 0; // Empiezan apagadas
+            child.material.toneMapped = false;
+            
+            if (!cloned.userData.tailMaterials) cloned.userData.tailMaterials = [];
+            cloned.userData.tailMaterials.push(child.material);
+        } else if ((isLight && isFront) || isWhiteEmissive) {
+            child.material = child.material.clone();
+            child.material.emissive = new THREE.Color(0xfff0dd);
+            child.material.emissiveIntensity = 0; // Empiezan apagadas
+            child.material.toneMapped = false;
+            
+            if (!cloned.userData.headMaterials) cloned.userData.headMaterials = [];
+            cloned.userData.headMaterials.push(child.material);
+        }
+      }
+    });
+
+    cloned.userData.bounds = {
+      // Retrasamos el punto levemente (-0.05) para meter la luz dentro de la chapa y que no flote
+      frontZ: finalBox.max.z - 0.05, 
+      backZ: finalBox.min.z + 0.05,
+      leftX: finalBox.max.x - 0.25,
+      rightX: finalBox.min.x + 0.25,
+      y: finalBox.min.y + (finalBox.max.y - finalBox.min.y) * 0.40
+    };
+
     return cloned;
-  }, [originalScene]);
+  }, [originalScene, safeModelPath]);
 
   useEffect(() => {
     wheelsRef.current = [];
@@ -99,9 +164,34 @@ export default function CarModel({ modelPath, isGarage = false }) {
          // Assuming rotation on X moves the wheel forward
          wheel.rotation.x -= GameState.speed * delta * 2;
      });
+
+     // Animar las luces traseras y delanteras nativas
+     const t = GameState.transitionProgress;
+     const isNightTarget = GameState.targetBiome === 'retrowave' || GameState.sceneTheme === 'night';
+     const isNightCurrent = GameState.currentBiome === 'retrowave' || GameState.sceneTheme === 'night';
+     
+     const tailIntensityA = isNightCurrent ? 12.0 : 0.0;
+     const tailIntensityB = isNightTarget ? 12.0 : 0.0;
+     const currentTail = THREE.MathUtils.lerp(tailIntensityA, tailIntensityB, t);
+
+     const headIntensityA = isNightCurrent ? 8.0 : 0.0;
+     const headIntensityB = isNightTarget ? 8.0 : 0.0;
+     const currentHead = THREE.MathUtils.lerp(headIntensityA, headIntensityB, t);
+
+     if (scene.userData.tailMaterials) {
+         scene.userData.tailMaterials.forEach(mat => mat.emissiveIntensity = currentTail);
+     }
+     if (scene.userData.headMaterials) {
+         scene.userData.headMaterials.forEach(mat => mat.emissiveIntensity = currentHead);
+     }
   });
 
-  return <primitive object={scene} />;
+  return (
+    <group>
+      <primitive object={scene} />
+      {!isGarage && <Headlights isTraffic={false} bounds={scene.userData.bounds} />}
+    </group>
+  );
 }
 
 // Preload all cars to avoid hitches when swapping in the garage

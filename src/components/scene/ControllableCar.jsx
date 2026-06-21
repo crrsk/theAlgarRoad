@@ -14,6 +14,10 @@ const MOVEMENT_BOUNDS = {
 const STEERING_SPEED = 5.5; // Mejor giro a altas velocidades
 const FRICTION = 8; // Fricción y resistencia del aire
 
+const policeSirenAudio = new Audio('/sounds/police-sirene.mp3');
+policeSirenAudio.loop = true;
+policeSirenAudio.volume = 0.6;
+
 export default function ControllableCar() {
   const groupRef = useRef(null);
   const rigidBodyRef = useRef(null);
@@ -124,10 +128,19 @@ export default function ControllableCar() {
       }
     }
 
-    if (GameState.isMenu || GameState.isPaused) return;
+    if (GameState.isMenu || GameState.isPaused) {
+      if (!policeSirenAudio.paused) {
+        policeSirenAudio.pause();
+      }
+      return;
+    }
 
     if (GameState.isGameOver) {
       GameState.speed = THREE.MathUtils.lerp(GameState.speed, 0, delta * 5);
+      if (!policeSirenAudio.paused) {
+        policeSirenAudio.pause();
+        policeSirenAudio.currentTime = 0;
+      }
       return;
     }
 
@@ -145,6 +158,19 @@ export default function ControllableCar() {
       }
     } else {
       slowTimer.current = 0;
+    }
+
+    // Control de la sirena de policía:
+    // Suena si la policía está en escena, o si estamos en la zona de advertencia (1s antes de que aparezca)
+    if (GameState.policeActive || slowTimer.current > 4) {
+      if (policeSirenAudio.paused) {
+        policeSirenAudio.play().catch(e => console.log("Siren error:", e));
+      }
+    } else {
+      if (!policeSirenAudio.paused) {
+        policeSirenAudio.pause();
+        policeSirenAudio.currentTime = 0;
+      }
     }
 
     const keys = pressedKeysRef.current;

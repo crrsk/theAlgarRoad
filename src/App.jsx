@@ -448,19 +448,19 @@ export default function App() {
       )}
 
       {isPaused && !isGameOver && !isMenu && (
-        <div className="pause-overlay">
-          <div className="pause-modal">
-            <h1>Juego en Pausa</h1>
-            <p>Pulsa ESC para continuar</p>
-            {renderVolumeControl()}
-            <button type="button" onClick={handleOpenGarage} className="restart-btn garage-btn" style={{ marginRight: '1.5rem' }}>
-              GARAJE
-            </button>
-            <button type="button" onClick={() => { GameState.isPaused = false; setIsPaused(false); }} className="restart-btn">
-              Continuar
-            </button>
+       <div className="pause-overlay">
+            <div className="pause-modal">
+              <h1>Juego en Pausa</h1>
+              <p>Pulsa ESC para continuar</p>
+              {renderVolumeControl()}
+              <button type="button" onClick={handleOpenGarage} className="restart-btn garage-btn" style={{ marginRight: '1.5rem' }}>
+                GARAJE
+              </button>
+              <button type="button" onClick={() => { GameState.isPaused = false; setIsPaused(false); }} className="restart-btn">
+                Continuar
+              </button>
+            </div>
           </div>
-        </div>
       )}
     </>
   );

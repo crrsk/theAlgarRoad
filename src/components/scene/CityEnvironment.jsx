@@ -21,8 +21,8 @@ const BIOME_MATERIALS = {
     road: new THREE.Color(0xffffff),
     sidewalk: new THREE.Color(0xffffff),
     facade: new THREE.Color(0xffffff),
-    window: new THREE.Color(0xffe6a3),
-    windowEmissive: new THREE.Color(0xffc35a),
+    window: new THREE.Color(0x000000), // Black base to prevent light wash-out
+    windowEmissive: new THREE.Color(0xffe6a3), // Original pale yellow color
     windowEmissiveInt: 1.0, // base multiplier
     pineTrunk: new THREE.Color(0x3d2817),
     pineLeaves: new THREE.Color(0x1e3f20),
@@ -39,17 +39,17 @@ const BIOME_MATERIALS = {
     road: new THREE.Color(0x050208), // Extremely dark purple
     sidewalk: new THREE.Color(0x020104), // Extremely dark purple
     facade: new THREE.Color(0x1a1a2a), // Darker buildings
-    window: new THREE.Color(0x00ffff), // Cyan
+    window: new THREE.Color(0x000000), // Black base
     windowEmissive: new THREE.Color(0xff00ff), // Magenta glow
-    windowEmissiveInt: 2.5,
+    windowEmissiveInt: 2.0,
     pineTrunk: new THREE.Color(0x111115),
     pineLeaves: new THREE.Color(0x001111),
     pineEmissive: new THREE.Color(0x00ffff), // Cyan wireframe glow
-    pineEmissiveInt: 1.5,
+    pineEmissiveInt: 8.0,
     roundTrunk: new THREE.Color(0x111115),
     roundLeaves: new THREE.Color(0x110011),
     roundEmissive: new THREE.Color(0xff00ff), // Magenta glow
-    roundEmissiveInt: 1.5,
+    roundEmissiveInt: 8.0,
     lightPole: new THREE.Color(0x0a0a10),
   }
 };
@@ -86,10 +86,12 @@ function createSideBuildings() {
 function createGapTrees() {
   const sides = [-1, 1];
   return sides.flatMap((side) => (
-    Array.from({ length: 22 }, (_, index) => {
+    Array.from({ length: 30 }, (_, index) => {
       const seed = Math.abs(side * 88 + index * 19);
-      const zOffset = -39 - (index * 0.65) - (Math.random() * 0.5);
-      const xOffset = side * (3.8 + Math.random() * 5.0);
+      // Bosque profundo en la coordenada Z (-41 a -53), lejos de los edificios (que van de -4.8 a -37.8)
+      const zOffset = -41 - (index * 0.4);
+      // Esparcidos ampliamente en el eje X para crear volumen de bosque (desde 3.8 hasta 12.0)
+      const xOffset = side * (3.8 + (seed % 82) * 0.1);
       
       return {
         isTree: true,
@@ -104,11 +106,11 @@ function createGapTrees() {
 function createStreetLights() {
   const sides = [-1, 1];
   return sides.flatMap((side) => (
-    Array.from({ length: 8 }, (_, index) => {
+    Array.from({ length: 4 }, (_, index) => {
       return {
         side,
         loopLength: BUILDING_LOOP_LENGTH,
-        position: [side * (SIDEWALK_X - 0.2), -0.66, -index * 7],
+        position: [side * (SIDEWALK_X - 0.2), -0.66, -index * 13.5],
       };
     })
   ));
@@ -232,8 +234,9 @@ export default function CityEnvironment({ theme }) {
       matRefs.window.current.color.lerpColors(matA.window, matB.window, t);
       matRefs.window.current.emissive.lerpColors(matA.windowEmissive, matB.windowEmissive, t);
       const intensity = THREE.MathUtils.lerp(matA.windowEmissiveInt, matB.windowEmissiveInt, t);
-      // Theme multiplier applied to base intensity
-      matRefs.window.current.emissiveIntensity = intensity * theme.buildingLight;
+      // Soften the theme multiplier so day blooms and night doesn't blind
+      const themeFactor = 0.8 + (theme.buildingLight * 0.2);
+      matRefs.window.current.emissiveIntensity = intensity * themeFactor;
     }
 
     if (matRefs.pineTrunk.current) matRefs.pineTrunk.current.color.lerpColors(matA.pineTrunk, matB.pineTrunk, t);
@@ -258,7 +261,7 @@ export default function CityEnvironment({ theme }) {
       const emitA = isNightCurrent ? new THREE.Color(0xffbb55) : new THREE.Color(0x000000);
       const emitB = isNightTarget ? new THREE.Color(0xff00ff) : new THREE.Color(0x000000); // Magenta bulb in retrowave
       matRefs.lightBulb.current.emissive.lerpColors(emitA, emitB, t);
-      matRefs.lightBulb.current.emissiveIntensity = isNightCurrent || isNightTarget ? 2 : 0;
+      matRefs.lightBulb.current.emissiveIntensity = isNightCurrent || isNightTarget ? 12.0 : 0;
     }
   });
 
@@ -301,7 +304,7 @@ export default function CityEnvironment({ theme }) {
       {/* INSTANCED WINDOWS */}
       <Instances frustumCulled={false} limit={3500}>
         <planeGeometry args={[0.25, 0.45]} />
-        <meshStandardMaterial ref={matRefs.window} color={0xffe6a3} emissive={0xffc35a} emissiveIntensity={theme.buildingLight} toneMapped={false} />
+        <meshStandardMaterial ref={matRefs.window} color={0x000000} emissive={0xffe6a3} emissiveIntensity={theme.buildingLight} toneMapped={false} />
         {allWindows.map((w, i) => <WindowInstance key={i} data={w} />)}
       </Instances>
 

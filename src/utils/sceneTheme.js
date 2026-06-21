@@ -21,11 +21,11 @@ const SCENE_THEMES = {
   },
   night: {
     buildingLight: 1.6,
-    fog: '#111827',
-    keyLight: 0.72,
-    sky: '#111827',
-    street: 0x242832,
-    sunColor: 0xbcd7ff,
+    fog: '#030508',
+    keyLight: 0.05,
+    sky: '#030508',
+    street: 0x050608,
+    sunColor: 0x4466aa,
     type: 'night',
   },
   retrowave: {

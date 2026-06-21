@@ -23,3 +23,5 @@ server/data
 *.njsproj
 *.sln
 *.sw?
+
+.env

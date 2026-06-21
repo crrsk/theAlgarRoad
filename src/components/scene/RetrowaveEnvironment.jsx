@@ -204,14 +204,14 @@ export default function RetrowaveEnvironment() {
       {/* EDIFICIOS DE CUADRÍCULA (Wireframe Buildings) */}
       <Instances frustumCulled={false} limit={50}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={0x020205} roughness={0.5} metalness={0.8} emissive={0x00ffff} emissiveIntensity={1.0} wireframe />
+        <meshStandardMaterial color={0x020205} roughness={0.5} metalness={0.8} emissive={0x00ffff} emissiveIntensity={8.0} wireframe />
         {buildings.map((b, i) => <BuildingInstance key={`bld-${i}`} data={b} biome="retrowave" />)}
       </Instances>
 
       {/* ANILLOS DE NEÓN TÚNEL (Torus) */}
       <Instances frustumCulled={false} limit={20}>
         <torusGeometry args={[12, 0.2, 16, 64]} />
-        <meshStandardMaterial color={0xff00ff} emissive={0xff00ff} emissiveIntensity={2.0} toneMapped={false} />
+        <meshStandardMaterial color={0xff00ff} emissive={0xff00ff} emissiveIntensity={12.0} toneMapped={false} />
         {rings.map((r, i) => (
           <BuildingInstance key={`ring-${i}`} data={{...r, y: 3.5, width: 1, height: 1, depth: 1}} biome="retrowave" />
         ))}
@@ -220,7 +220,7 @@ export default function RetrowaveEnvironment() {
       {/* PIRÁMIDES FLOTANTES (Trees) */}
       <Instances frustumCulled={false} limit={100}>
         <tetrahedronGeometry args={[1, 0]} />
-        <meshStandardMaterial color={0x110022} roughness={0.3} emissive={0x00ffff} emissiveIntensity={2.0} wireframe />
+        <meshStandardMaterial color={0x110022} roughness={0.3} emissive={0x00ffff} emissiveIntensity={10.0} wireframe />
         {trees.map((t, i) => <TreeRoundInstance key={`tree-${i}`} data={t} biome="retrowave" />)}
       </Instances>
     </group>

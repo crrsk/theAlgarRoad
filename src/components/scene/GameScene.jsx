@@ -3,16 +3,18 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Environment, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import { Physics } from '@react-three/rapier';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import CityEnvironment from './CityEnvironment';
 import RetrowaveEnvironment from './RetrowaveEnvironment';
 import ControllableCar from './ControllableCar';
 import TrafficManager from './TrafficManager';
+import WeatherSystem from './WeatherSystem';
 import { GameState } from '../../gameState';
 import { getThemeByName } from '../../utils/sceneTheme';
 
 function BiomeController({ baseCityTheme }) {
   const { scene } = useThree();
-  
+
   const hemiRef = useRef(null);
   const ambientRef = useRef(null);
   const dirRef = useRef(null);
@@ -24,7 +26,7 @@ function BiomeController({ baseCityTheme }) {
 
   useEffect(() => {
     scene.background = new THREE.Color(baseCityTheme.sky);
-    scene.fog = new THREE.Fog(baseCityTheme.fog, 15, 35);
+    scene.fog = new THREE.Fog(baseCityTheme.fog, 20, 50);
   }, [baseCityTheme, scene]);
 
   useFrame((_, delta) => {
@@ -76,18 +78,18 @@ function BiomeController({ baseCityTheme }) {
       const hemiA = isRetrowaveA ? 0x220044 : (isNightA ? 0x8fb8ff : 0xdde8ff);
       const hemiB = isRetrowaveB ? 0x220044 : (isNightB ? 0x8fb8ff : 0xdde8ff);
       hemiRef.current.color.lerpColors(new THREE.Color(hemiA), new THREE.Color(hemiB), t);
-      const intensityA = isRetrowaveA ? 0.05 : (isNightA ? 0.42 : 0.72);
-      const intensityB = isRetrowaveB ? 0.05 : (isNightB ? 0.42 : 0.72);
+      const intensityA = isRetrowaveA ? 0.05 : (isNightA ? 0.05 : 0.72);
+      const intensityB = isRetrowaveB ? 0.05 : (isNightB ? 0.05 : 0.72);
       hemiRef.current.intensity = THREE.MathUtils.lerp(intensityA, intensityB, t);
     }
-    
+
     if (ambientRef.current) {
       const colA = isRetrowaveA ? 0x110022 : 0xffffff;
       const colB = isRetrowaveB ? 0x110022 : 0xffffff;
       ambientRef.current.color.lerpColors(new THREE.Color(colA), new THREE.Color(colB), t);
-      
-      const intensityA = isRetrowaveA ? 0.05 : (isNightA ? 0.2 : 0.42);
-      const intensityB = isRetrowaveB ? 0.05 : (isNightB ? 0.2 : 0.42);
+
+      const intensityA = isRetrowaveA ? 0.05 : (isNightA ? 0.02 : 0.42);
+      const intensityB = isRetrowaveB ? 0.05 : (isNightB ? 0.02 : 0.42);
       ambientRef.current.intensity = THREE.MathUtils.lerp(intensityA, intensityB, t);
     }
 
@@ -98,18 +100,21 @@ function BiomeController({ baseCityTheme }) {
 
     if (spotRef.current) {
       spotRef.current.color.lerpColors(new THREE.Color(themeA.sunColor), new THREE.Color(themeB.sunColor), t);
-      const intensityA = isRetrowaveA ? 0.1 : (isNightA ? 0.72 : 1.85);
-      const intensityB = isRetrowaveB ? 0.1 : (isNightB ? 0.72 : 1.85);
+      // Apagamos la luz cenital global por completo en la noche y el retrowave para que no parezca un faro fantasma
+      const intensityA = (isRetrowaveA || isNightA) ? 0.0 : 1.85;
+      const intensityB = (isRetrowaveB || isNightB) ? 0.0 : 1.85;
       spotRef.current.intensity = THREE.MathUtils.lerp(intensityA, intensityB, t);
     }
 
-    if (point1Ref.current) point1Ref.current.intensity = THREE.MathUtils.lerp(isRetrowaveA ? 0 : 0.58, isRetrowaveB ? 0 : 0.58, t);
-    if (point2Ref.current) point2Ref.current.intensity = THREE.MathUtils.lerp(isRetrowaveA ? 0 : 1.15, isRetrowaveB ? 0 : 1.15, t);
-    if (point3Ref.current) point3Ref.current.intensity = THREE.MathUtils.lerp(isRetrowaveA ? 0 : 0.82, isRetrowaveB ? 0 : 0.82, t);
-    if (dir2Ref.current) dir2Ref.current.intensity = THREE.MathUtils.lerp(isRetrowaveA ? 0 : 0.45, isRetrowaveB ? 0 : 0.45, t);
+    if (point1Ref.current) point1Ref.current.intensity = THREE.MathUtils.lerp(isRetrowaveA || isNightA ? 0 : 0.58, isRetrowaveB || isNightB ? 0 : 0.58, t);
+    if (point2Ref.current) point2Ref.current.intensity = THREE.MathUtils.lerp(isRetrowaveA || isNightA ? 0 : 1.15, isRetrowaveB || isNightB ? 0 : 1.15, t);
+    if (point3Ref.current) point3Ref.current.intensity = THREE.MathUtils.lerp(isRetrowaveA || isNightA ? 0 : 0.82, isRetrowaveB || isNightB ? 0 : 0.82, t);
+    if (dir2Ref.current) dir2Ref.current.intensity = THREE.MathUtils.lerp(isRetrowaveA || isNightA ? 0 : 0.45, isRetrowaveB || isNightB ? 0 : 0.45, t);
 
     if (scene.environmentIntensity !== undefined) {
-      scene.environmentIntensity = THREE.MathUtils.lerp(isRetrowaveA ? 0.05 : 1.0, isRetrowaveB ? 0.05 : 1.0, t);
+      const envA = isRetrowaveA ? 0.05 : (isNightA ? 0.05 : 1.0);
+      const envB = isRetrowaveB ? 0.05 : (isNightB ? 0.05 : 1.0);
+      scene.environmentIntensity = THREE.MathUtils.lerp(envA, envB, t);
     }
   });
 
@@ -120,7 +125,7 @@ function BiomeController({ baseCityTheme }) {
       <ambientLight ref={ambientRef} intensity={0.42} color={0xffffff} />
       <directionalLight ref={dirRef} position={[2, 4, 3]} intensity={1.35} color={0xfff4e4} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
       <spotLight ref={spotRef} position={[0, 2.7, 3.2]} angle={0.34} penumbra={0.7} intensity={1.85} color={0xfff4e4} castShadow />
-      
+
       <pointLight ref={point1Ref} position={[0, 1.25, 2.45]} intensity={0.58} color={0xffffff} />
       <pointLight ref={point2Ref} position={[-1.45, 1.15, -1.9]} intensity={1.15} color={0x66d9ff} />
       <pointLight ref={point3Ref} position={[1.45, 1.05, -1.9]} intensity={0.82} color={0xffbd76} />
@@ -165,7 +170,11 @@ export default function GameScene({ sceneTheme }) {
           <RetrowaveEnvironment />
           <TrafficManager />
           <ControllableCar />
+          <WeatherSystem />
         </Physics>
+        <EffectComposer disableNormalPass multisampling={4}>
+          <Bloom luminanceThreshold={5.0} luminanceSmoothing={0.1} mipmapBlur intensity={1.0} />
+        </EffectComposer>
       </Suspense>
     </Canvas>
   );

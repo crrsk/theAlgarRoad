@@ -18,6 +18,10 @@ export const GameState = {
   transitionPhase: 0,
   transitionTimer: 0,
   nextBiomeDistance: 800,
+  xpMultiplier: 1,
+  xpMultiplierTimer: 0,
+  clearTraffic: false,
+  needsPositionReset: false,
   selectedCar: {
     maxSpeed: 30, // Default 300 km/h (Algar Beast)
     acceleration: 25,
@@ -25,7 +29,7 @@ export const GameState = {
   },
   reset() {
     this.speed = 0;
-    this.isMenu = false;
+    this.isMenu = true;
     this.isGameOver = false;
     this.gameOverReason = 'crash';
     this.isPaused = false;
@@ -40,5 +44,10 @@ export const GameState = {
     this.transitionPhase = 0;
     this.transitionTimer = 0;
     this.nextBiomeDistance = 800;
+    this.xpMultiplier = 1;
+    this.xpMultiplierTimer = 0;
+    this.clearTraffic = false;
+    this.needsPositionReset = false;
+    this.playerX = 0;
   }
 };

@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { RigidBody } from '@react-three/rapier';
+import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import TrafficCar, { VEHICLE_CONFIG } from './TrafficCar';
 import { GameState } from '../../gameState';
 
@@ -39,19 +39,34 @@ export default function TrafficManager() {
   useFrame((_, delta) => {
     if (GameState.isMenu || GameState.isGameOver || GameState.isPaused) return;
 
+    if (GameState.xpMultiplierTimer > 0) {
+      GameState.xpMultiplierTimer -= delta;
+      if (GameState.xpMultiplierTimer <= 0) {
+        GameState.xpMultiplier = 1;
+        GameState.xpMultiplierTimer = 0;
+      }
+    }
+
     // Actualizar distancia recorrida para la dificultad
     // 30 speed max -> Queremos 33.3 m/s
     // Multiplicador = 33.3 / 30 = ~1.11
-    GameState.distance += GameState.speed * delta * 1.11;
+    GameState.distance += GameState.speed * delta * 1.11 * GameState.xpMultiplier;
 
     let needsRender = false;
+
+    if (GameState.clearTraffic) {
+      GameState.clearTraffic = false;
+      carsRef.current = [];
+      setActiveCars([]);
+      return; // Saltamos este frame
+    }
 
     // --- POLICE SPAWN LOGIC ---
     if (GameState.policeRequested) {
       GameState.policeRequested = false;
       GameState.policeActive = true;
 
-      const policePath = '/CochesCirculacion/Police Car.glb';
+      const policePath = './CochesCirculacion/Police Car.glb';
       // Mismo carril aproximado que el jugador
       const laneX = GameState.playerX > 0 ? 1.2 : -1.2;
       const spawnZ = 35; // Más lejos para dar tiempo de reacción (antes 20)
@@ -65,6 +80,7 @@ export default function TrafficManager() {
         direction: 'same',
         speed: carSpeed,
         isPolice: true,
+        length: 3.0,
         meshRef: React.createRef()
       });
       needsRender = true;
@@ -101,6 +117,8 @@ export default function TrafficManager() {
           modelPath,
           direction,
           speed: carSpeed,
+          length: randomConfig.length || 3.0,
+          isPolice: false,
           meshRef: React.createRef()
         });
         needsRender = true;
@@ -189,10 +207,11 @@ export default function TrafficManager() {
             ref={car.meshRef}
             name={car.isPolice ? "police_car" : "traffic_car"}
             type="kinematicPosition"
-            colliders="hull"
+            colliders={false}
             position={[car.x, -0.66, car.z]}
             rotation={[0, rotationY, 0]}
           >
+            <CuboidCollider args={[0.6, 0.6, car.length / 2]} position={[0, 0.6, 0]} />
             <TrafficCar modelPath={car.modelPath} />
           </RigidBody>
         );
